@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Delta Key</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,Roboto,sans-serif}
+  body{background:#0f0803;color:#fff;padding:22px 16px;min-height:100vh}
+  .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .hd h1{font-size:22px;color:#F4A950;letter-spacing:.15em;font-weight:bold}
+  .hd .close{background:transparent;border:1.5px solid #F4A950;border-radius:22px;padding:10px 18px;color:#F4A950;font-size:12px;font-weight:bold;letter-spacing:.08em;width:auto;height:auto;box-shadow:none;margin:0;cursor:pointer;-webkit-appearance:none;appearance:none;outline:none}
+  .hd .close:active{transform:scale(.96);background:#F4A950;color:#0f0803}
+  .sub{color:#B8A088;font-size:12px;margin-top:-16px;margin-bottom:22px}
+  .lbl{color:#D9C7A8;font-size:12px;font-weight:bold;margin-top:16px;margin-bottom:8px;letter-spacing:.08em}
+  textarea{width:100%;background:#2A1A0E;border:1px solid #5A3D22;border-radius:14px;color:#fff;padding:14px;font-size:13px;min-height:90px;resize:none;font-family:monospace;outline:none}
+  textarea::placeholder{color:#7A5A38}
+  textarea:focus{border-color:#F4A950}
+  .btn-main{width:100%;height:58px;background:linear-gradient(180deg,#F4A950,#C77B3F);border:none;border-radius:30px;color:#fff;font-size:15px;font-weight:bold;letter-spacing:.12em;margin-top:18px;box-shadow:0 8px 20px rgba(0,0,0,.4);cursor:pointer;-webkit-appearance:none;appearance:none;outline:none}
+  .btn-main:active{transform:scale(.98)}
+  .btn-main:disabled{opacity:.5}
+  
+  .btn-copy{width:100%;height:52px;background:#2A1A0E;border:1.5px solid #F4A950;border-radius:26px;color:#F4A950;font-size:14px;font-weight:bold;letter-spacing:.1em;margin-top:12px;cursor:pointer;outline:none;display:none;-webkit-appearance:none;appearance:none}
+  .btn-copy:active{transform:scale(.98);background:#F4A950;color:#0f0803}
+  .btn-copy.copied{background:#7CF97C;border-color:#7CF97C;color:#0f0803}
+
+  .status{text-align:center;color:#B8A088;font-size:12px;margin-top:16px}
+  .status.ok{color:#7CF97C}
+  .status.err{color:#FF6B6B}
+  .log{background:#1A0F08;border:1px solid #3A2410;border-radius:14px;padding:16px;margin-top:16px;color:#F4A950;font-size:13px;word-break:break-all;font-family:monospace;line-height:1.5;user-select:all;-webkit-user-select:all;min-height:60px;white-space:pre-wrap}
+  .log:empty{display:none}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>DELTA KEY</h1>
+  <button class="close" onclick="window.closeBtn&&window.closeBtn()">✕ TUTUP</button>
+</div>
+<div class="sub">generator key · platoboost / delta</div>
+
+<div class="lbl">LINK</div>
+<textarea id="input" placeholder="paste link delta / platoboost&#10;contoh: https://auth.platorelay.com/a?d=..."></textarea>
+
+<button id="btn" class="btn-main">GENERATE KEY</button>
+<button id="btnCopy" class="btn-copy">SALIN KEY</button>
+
+<div id="status" class="status ok">ready</div>
+<div id="log" class="log"></div>
+
+<script>
+const SBOX = new Uint8Array([
+0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
+0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
+0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,
+0x04,0xc7,0x23,0xc3,0x18,0x96,0x05,0x9a,0x07,0x12,0x80,0xe2,0xeb,0x27,0xb2,0x75,
+0x09,0x83,0x2c,0x1a,0x1b,0x6e,0x5a,0xa0,0x52,0x3b,0xd6,0xb3,0x29,0xe3,0x2f,0x84,
+0x53,0xd1,0x00,0xed,0x20,0xfc,0xb1,0x5b,0x6a,0xcb,0xbe,0x39,0x4a,0x4c,0x58,0xcf,
+0xd0,0xef,0xaa,0xfb,0x43,0x4d,0x33,0x85,0x45,0xf9,0x02,0x7f,0x50,0x3c,0x9f,0xa8,
+0x51,0xa3,0x40,0x8f,0x92,0x9d,0x38,0xf5,0xbc,0xb6,0xda,0x21,0x10,0xff,0xf3,0xd2,
+0xcd,0x0c,0x13,0xec,0x5f,0x97,0x44,0x17,0xc4,0xa7,0x7e,0x3d,0x64,0x5d,0x19,0x73,
+0x60,0x81,0x4f,0xdc,0x22,0x2a,0x90,0x88,0x46,0xee,0xb8,0x14,0xde,0x5e,0x0b,0xdb,
+0xe0,0x32,0x3a,0x0a,0x49,0x06,0x24,0x5c,0xc2,0xd3,0xac,0x62,0x91,0x95,0xe4,0x79,
+0xe7,0xc8,0x37,0x6d,0x8d,0xd5,0x4e,0xa9,0x6c,0x56,0xf4,0xea,0x65,0x7a,0xae,0x08,
+0xba,0x78,0x25,0x2e,0x1c,0xa6,0xb4,0xc6,0xe8,0xdd,0x74,0x1f,0x4b,0xbd,0x8b,0x8a,
+0x70,0x3e,0xb5,0x66,0x48,0x03,0xf6,0x0e,0x61,0x35,0x57,0xb9,0x86,0xc1,0x1d,0x9e,
+0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
+0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
+]);
+const RCON = [0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36];
+
+function expandKey(key){
+  const w = new Uint8Array(176);
+  w.set(key);
+  for(let i=4;i<44;i++){
+    let t=[w[(i-1)*4],w[(i-1)*4+1],w[(i-1)*4+2],w[(i-1)*4+3]];
+    if(i%4===0){
+      const tmp=t[0];
+      t[0]=SBOX[t[1]]^RCON[(i/4)-1];
+      t[1]=SBOX[t[2]];
+      t[2]=SBOX[t[3]];
+      t[3]=SBOX[tmp];
+    }
+    w[i*4]=w[(i-4)*4]^t[0];
+    w[i*4+1]=w[(i-4)*4+1]^t[1];
+    w[i*4+2]=w[(i-4)*4+2]^t[2];
+    w[i*4+3]=w[(i-4)*4+3]^t[3];
+  }
+  return w;
+}
+function xtime(a){return ((a<<1)^((a&0x80)?0x1b:0))&0xff;}
+function aesBlock(input,w){
+  const s=new Uint8Array(16);
+  for(let i=0;i<16;i++) s[i]=input[i]^w[i];
+  for(let r=1;r<=10;r++){
+    for(let i=0;i<16;i++) s[i]=SBOX[s[i]];
+    let t=s[1];s[1]=s[5];s[5]=s[9];s[9]=s[13];s[13]=t;
+    t=s[2];s[2]=s[10];s[10]=t;
+    t=s[6];s[6]=s[14];s[14]=t;
+    t=s[3];s[3]=s[15];s[15]=s[11];s[11]=s[7];s[7]=t;
+    if(r<10){
+      for(let c=0;c<4;c++){
+        const i=c*4;
+        const a0=s[i],a1=s[i+1],a2=s[i+2],a3=s[i+3];
+        s[i]  =xtime(a0)^(xtime(a1)^a1)^a2^a3;
+        s[i+1]=a0^xtime(a1)^(xtime(a2)^a2)^a3;
+        s[i+2]=a0^a1^xtime(a2)^(xtime(a3)^a3);
+        s[i+3]=(xtime(a0)^a0)^a1^a2^xtime(a3);
+      }
+    }
+    for(let i=0;i<16;i++) s[i]^=w[r*16+i];
+  }
+  return s;
+}
+function aesCtr(plain,keyBytes,ivBytes){
+  const data=new TextEncoder().encode(plain);
+  const key=Uint8Array.from(keyBytes);
+  const iv=Uint8Array.from(ivBytes);
+  const out=new Uint8Array(data.length);
+  const w=expandKey(key);
+  for(let i=0;i<data.length;i+=16){
+    const ks=aesBlock(iv,w);
+    for(let j=0;j<16&&(i+j)<data.length;j++) out[i+j]=data[i+j]^ks[j];
+    for(let j=15;j>=0;j--){iv[j]=(iv[j]+1)&0xff;if(iv[j]!==0)break;}
+  }
+  return out;
+}
+function hex(bytes){return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');}
+
+const AUTH_API = "https://auth.platorelay.com/api";
+const SERVICE = 3;
+// UPDATE VERSI CLIENT KE YANG LEBIH BARU
+const VERSION = "8.6.0"; 
+const UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+const SCREEN = "390x844";
+const MIN_TICKET_LEN = 33;
+const MIN_STEP_GAP = 5.0;
+const STEP_THROTTLE_SLEEP = 2.0;
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function buildMetaStream(ticket, nowMs){
+  if(ticket.length < MIN_TICKET_LEN) return [null,null];
+  if(nowMs==null) nowMs = Date.now();
+  const keyMeta = ticket.substring(0,16);
+  const ctrMeta = ticket.substring(16,32);
+  const keyStream = ticket.substring(1,17);
+  const ctrStream = ticket.substring(17,33);
+  const metaPlain = JSON.stringify({browserInfo:[{screen:SCREEN, ua:UA, time:nowMs}]});
+  const streamPlain = JSON.stringify({events:[{event:1, data:{time:nowMs}}]});
+  const meta = hex(aesCtr(metaPlain, Array.from(keyMeta).map(c=>c.charCodeAt(0)), Array.from(ctrMeta).map(c=>c.charCodeAt(0))));
+  const stream = hex(aesCtr(streamPlain, Array.from(keyStream).map(c=>c.charCodeAt(0)), Array.from(ctrStream).map(c=>c.charCodeAt(0))));
+  return [meta,stream];
+}
+function extractTicket(arg){
+  const t = arg.trim();
+  if(t.startsWith("http")){
+    try{ const u = new URL(t); const d = u.searchParams.get("d"); if(d) return d; }catch(e){}
+  }
+  return t;
+}
+function decodeCallbackUrl(lootUrl){
+  try{
+    const u = new URL(lootUrl);
+    const r = u.searchParams.get("r") || "";
+    if(!r) return null;
+    let b64 = r.replace(/-/g,'+').replace(/_/g,'/');
+    while(b64.length%4) b64 += "=";
+    const dec = atob(b64);
+    if(dec.startsWith("http")) return dec;
+  }catch(e){}
+  return null;
+}
+function extractTicketFromCallback(cb){
+  if(!cb) return null;
+  try{ const u = new URL(cb); return u.searchParams.get("d"); }catch(e){return null;}
+}
+async function doStep(ticket){
+  const [meta, stream] = buildMetaStream(ticket);
+  if(meta==null) return {success:false, error:"ticket terlalu pendek"};
+  const url = AUTH_API + "/session/step?ticket=" + encodeURIComponent(ticket) + "&service=" + SERVICE;
+  const body = JSON.stringify({captcha:null, meta:meta, stream:stream, resolved:true});
+  try{
+    const r = await fetch(url,{method:"PUT",headers:{"Content-Type":"application/json","Accept":"application/json, text/plain, */*","x-client-name":"platoboost webclient","x-client-version":VERSION},body:body});
+    const txt = await r.text();
+    try{ return JSON.parse(txt); }catch(e){ return {success:false, raw:txt.substring(0,200)}; }
+  }catch(e){ return {success:false, error:String(e)}; }
+}
+async function pollKey(ticket, tries){
+  tries = tries || 10;
+  for(let i=0;i<tries;i++){
+    const url = AUTH_API + "/session/status?ticket=" + encodeURIComponent(ticket) + "&service=" + SERVICE;
+    try{
+      const r = await fetch(url,{headers:{"Accept":"application/json","x-client-name":"platoboost webclient","x-client-version":VERSION}});
+      const d = await r.json();
+      const k = ((d.data)||{}).key || "";
+      if(k && k !== "KEY_NOT_FOUND") return k;
+    }catch(e){}
+    await sleep(500);
+  }
+  return null;
+}
+async function solve(rawLink, onLog){
+  onLog = onLog || function(){};
+  const ticket0 = extractTicket(rawLink);
+  if(ticket0.length < MIN_TICKET_LEN) return "ERROR: ticket terlalu pendek";
+  onLog("[*] start ticket: " + ticket0.substring(0,30) + "...");
+  let ticket = ticket0;
+  const seen = new Set();
+  let gapTs = 0;
+  for(let rnd=0; rnd<12; rnd++){
+    if(seen.has(ticket)){ onLog("[!] ticket berulang, stop"); break; }
+    seen.add(ticket);
+    if(gapTs){
+      const elapsed = (Date.now() - gapTs)/1000;
+      if(elapsed < MIN_STEP_GAP){
+        const wait = MIN_STEP_GAP - elapsed;
+        onLog("[~] jeda " + wait.toFixed(1) + "s (rate limit server)...");
+        await sleep(wait*1000);
+      }
+    }
+    onLog("\n[*] round " + (rnd+1) + " — " + ticket.substring(0,30) + "...");
+    const r = await doStep(ticket);
+    gapTs = Date.now();
+    if(!r || !r.success){
+      const msg = String(r && (r.message || r.error) || "").toLowerCase();
+      if(msg.indexOf("too fast")>=0 || msg.indexOf("slow down")>=0){
+        onLog("    [!] throttled, tunggu " + STEP_THROTTLE_SLEEP + "s...");
+        await sleep(STEP_THROTTLE_SLEEP*1000);
+        continue;
+      }
+      onLog("    [!] gagal: " + (msg || (r && r.raw) || "unknown"));
+      await sleep(1500);
+      continue;
+    }
+    const data = r.data || {};
+    const k = data.key;
+    if(k && k !== "KEY_NOT_FOUND") return k;
+    const url = data.url || "";
+    onLog("    url: " + url.substring(0,80) + "...");
+    if(url === "about:blank" || !url){
+      onLog("    polling...");
+      const polled = await pollKey(ticket);
+      if(polled) return polled;
+      break;
+    }
+    const cb = decodeCallbackUrl(url);
+    const nt = cb ? extractTicketFromCallback(cb) : null;
+    if(nt && nt.length > 50){
+      onLog("    ticket baru: " + nt.substring(0,30) + "...");
+      ticket = nt;
+    } else {
+      onLog("    [!] decode gagal, polling...");
+      const polled = await pollKey(ticket);
+      if(polled) return polled;
+      break;
+    }
+  }
+  return "ERROR: gagal total";
+}
+
+const btn = document.getElementById("btn");
+const btnCopy = document.getElementById("btnCopy");
+const statusEl = document.getElementById("status");
+const logEl = document.getElementById("log");
+const inputEl = document.getElementById("input");
+
+let generatedKey = "";
+
+function setStatus(msg, cls){
+  statusEl.textContent = msg;
+  statusEl.className = "status" + (cls ? " " + cls : "");
+}
+
+async function run(){
+  const url = inputEl.value.trim();
+  if(!url){ setStatus("paste link dulu", "err"); return; }
+  
+  btn.disabled = true;
+  btn.textContent = "PROCESSING...";
+  btnCopy.style.display = "none";
+  generatedKey = "";
+  logEl.textContent = "";
+  setStatus("processing... (bisa 30-60 detik)");
+  
+  try{
+    const key = await solve(url, function(line){ logEl.textContent += line + "\n"; });
+    if(key && key.indexOf("ERROR") === 0){
+      setStatus("gagal", "err");
+      logEl.textContent += "\n" + key + "\n";
+    } else if(key && key !== "None"){
+      setStatus("KEY FOUND", "ok");
+      logEl.textContent += "\n" + key + "\n";
+      generatedKey = key;
+      btnCopy.style.display = "block";
+    } else {
+      setStatus("gagal — coba lagi", "err");
+    }
+  }catch(e){
+    setStatus("error", "err");
+    logEl.textContent += "\n" + (e.message || String(e)) + "\n";
+  }
+  
+  btn.disabled = false;
+  btn.textContent = "GENERATE KEY";
+}
+
+btn.addEventListener("click", run);
+
+btnCopy.addEventListener("click", async () => {
+  if (!generatedKey) return;
+  
+  try {
+    await navigator.clipboard.writeText(generatedKey);
+    showCopiedState();
+  } catch (err) {
+    const ta = document.createElement("textarea");
+    ta.value = generatedKey;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); showCopiedState(); } catch(e){}
+    ta.remove();
+  }
+});
+
+function showCopiedState() {
+  const originalText = btnCopy.textContent;
+  btnCopy.textContent = "TERSALIN KE CLIPBOARD";
+  btnCopy.classList.add("copied");
+  
+  setTimeout(() => {
+    btnCopy.textContent = originalText;
+    btnCopy.classList.remove("copied");
+  }, 2000);
+}
+
+window.closeBtn = function(){
+  if(window.AndroidBridge && window.AndroidBridge.close){
+    window.AndroidBridge.close();
+  } else {
+    try { window.history.back(); } catch(e){}
+  }
+};
+</script>
+</body>
+</html>
