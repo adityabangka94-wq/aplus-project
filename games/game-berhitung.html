@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Game Berhitung Seru</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #ffe259, #ffa751, #4facfe);
+    font-family: 'Comic Sans MS', 'Segoe UI', Arial, sans-serif;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 6vw 6vw 30px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 15px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.2);
+    text-align: center;
+    border: 6px solid #ffd93d;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(22px, 6.5vw, 30px);
+    color: #ff6b6b;
+    text-shadow: 2px 2px 0 #ffe066;
+  }
+  .subtitle {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+
+  /* Menu pilih operasi */
+  .section-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #888;
+    text-align: left;
+    margin: 10px 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .level-menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .level-btn {
+    padding: 12px 4px;
+    border-radius: 14px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    opacity: 0.55;
+  }
+  .level-btn.mudah { background: #51cf66; }
+  .level-btn.normal { background: #fcc419; }
+  .level-btn.sulit { background: #ff6b6b; }
+  .level-btn.selected { opacity: 1; outline: 3px solid #333; transform: scale(0.97); }
+
+  .op-menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .op-btn {
+    padding: 14px 8px;
+    border-radius: 16px;
+    border: none;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+  .op-btn.tambah { background: #51cf66; }
+  .op-btn.kurang { background: #339af0; }
+  .op-btn.kali { background: #ff922b; }
+  .op-btn.bagi { background: #cc5de8; }
+  .op-btn.campur { background: #ff6b6b; grid-column: 1 / -1; }
+  .op-btn { opacity: 0.55; }
+  .op-btn.selected { opacity: 1; outline: 4px solid #333; transform: scale(0.97); }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, #ff6b6b, #ff922b);
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #c92a2a;
+  }
+  .start-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c92a2a; }
+
+  /* Area soal */
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  .score-bar span.correct { color: #2f9e44; }
+  .score-bar span.wrong { color: #e03131; }
+
+  .question-box {
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    border-radius: 20px;
+    padding: 30px 10px;
+    margin-bottom: 18px;
+    box-shadow: inset 0 0 0 4px rgba(255,255,255,0.4);
+  }
+  #question {
+    font-size: clamp(20px, 6.5vw, 36px);
+    line-height: 1.3;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+    word-break: break-word;
+  }
+  #timerWrap { margin-top: 12px; }
+  .timer-num {
+    display: flex; justify-content: center; align-items: center; gap: 5px;
+    color: #fff; font-weight: bold; font-size: 14px; margin-bottom: 5px;
+  }
+  .timer-bar-outer {
+    height: 10px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .timer-bar-inner {
+    height: 100%;
+    width: 100%;
+    background: #ffd93d;
+    border-radius: 8px;
+  }
+  .timer-bar-inner.danger { background: #ff6b6b; }
+
+  .answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .answer-btn {
+    padding: 18px 8px;
+    font-size: clamp(20px, 6vw, 26px);
+    font-weight: bold;
+    border-radius: 16px;
+    border: none;
+    background: #fff3bf;
+    color: #333;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #e0c060;
+    transition: transform 0.08s;
+  }
+  .answer-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0c060; }
+  .answer-btn.correct { background: #8ce99a; box-shadow: 0 4px 0 #2f9e44; position: relative; }
+  .answer-btn.wrong { background: #ffa8a8; box-shadow: 0 4px 0 #e03131; position: relative; }
+  .answer-btn.correct::after {
+    content: '✔';
+    position: absolute;
+    top: 2px; right: 8px;
+    font-size: 14px;
+    color: #2f9e44;
+  }
+  .answer-btn.wrong::after {
+    content: '✘';
+    position: absolute;
+    top: 2px; right: 8px;
+    font-size: 14px;
+    color: #e03131;
+  }
+  .answer-btn:disabled { cursor: default; opacity: 1; }
+  .answer-btn:disabled:not(.correct):not(.wrong) { opacity: 0.5; }
+
+  .feedback {
+    min-height: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .feedback.happy { color: #2f9e44; }
+  .feedback.sad { color: #e03131; }
+
+  .back-btn {
+    background: #868e96;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  #gameArea { display: none; }
+  #resultArea { display: none; }
+  .result-emoji {
+    font-size: 60px;
+    margin-bottom: 6px;
+  }
+  .result-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ff6b6b;
+    margin-bottom: 6px;
+  }
+  .result-score {
+    font-size: 17px;
+    color: #444;
+    margin-bottom: 4px;
+  }
+  .result-score .correct { color: #2f9e44; font-weight: bold; }
+  .result-score .wrong { color: #e03131; font-weight: bold; }
+  .result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .result-actions button {
+    flex: 1;
+    padding: 14px 6px;
+    border-radius: 16px;
+    border: none;
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+  .btn-ulangi { background: #51cf66; }
+  .btn-ganti { background: #339af0; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🧮 Ayo Berhitung!</h1>
+  <div class="subtitle">Pilih jenjang &amp; jenis soal yang mau kamu latih</div>
+
+  <div id="menuArea">
+    <div class="section-label">Jenjang</div>
+    <div class="level-menu" id="jenjangMenu">
+      <button class="level-btn mudah selected" data-jenjang="sd" onclick="selectJenjang('sd', this)">🎒 SD</button>
+      <button class="level-btn normal" data-jenjang="smp" onclick="selectJenjang('smp', this)">📘 SMP</button>
+      <button class="level-btn sulit" data-jenjang="sma" onclick="selectJenjang('sma', this)">🎓 SMA</button>
+    </div>
+
+    <div class="section-label">Tingkat Kesulitan</div>
+    <div class="level-menu" id="levelMenu">
+      <button class="level-btn mudah" data-level="mudah" onclick="selectLevel('mudah', this)">😊 Mudah</button>
+      <button class="level-btn normal selected" data-level="normal" onclick="selectLevel('normal', this)">🙂 Normal</button>
+      <button class="level-btn sulit" data-level="sulit" onclick="selectLevel('sulit', this)">🔥 Sulit</button>
+    </div>
+    <div id="sulitHint" style="display:none; font-size:12px; color:#e03131; font-weight:bold; margin: -2px 2px 8px; text-align:left;">⏰ Mode Sulit: jawab tiap soal dalam 5 detik, kalau kehabisan waktu dianggap salah!</div>
+
+    <div class="section-label">Jenis Soal</div>
+    <div class="op-menu" id="opMenu"></div>
+
+    <button class="start-btn" onclick="startGame()">▶ Mulai Main!</button>
+  </div>
+
+  <div id="gameArea">
+    <div class="score-bar">
+      <span>Soal <span id="soalKe">1</span>/<span id="totalSoal">8</span></span>
+      <span class="correct">✅ <span id="benar">0</span></span>
+      <span class="wrong">❌ <span id="salah">0</span></span>
+    </div>
+    <div class="question-box">
+      <div id="question">?</div>
+      <div id="timerWrap" style="display:none;">
+        <div class="timer-num">⏱️ <span id="timerNum">5</span> detik</div>
+        <div class="timer-bar-outer"><div class="timer-bar-inner" id="timerBarInner"></div></div>
+      </div>
+    </div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="back-btn" onclick="backToMenu()">⬅ Ganti Jenis Soal</button>
+  </div>
+
+  <div id="resultArea">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <div class="result-title" id="resultTitle">Selesai!</div>
+    <div class="result-score">
+      Benar: <span class="correct" id="finalBenar">0</span> &nbsp;|&nbsp;
+      Salah: <span class="wrong" id="finalSalah">0</span>
+    </div>
+    <div class="result-actions">
+      <button class="btn-ulangi" onclick="startGame()">🔄 Main Lagi</button>
+      <button class="btn-ganti" onclick="backToMenu()">⚙️ Ganti Soal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let jenjang = 'sd';
+let mode = 'tambah';
+let level = 'normal';
+let benar = 0, salah = 0, soalKe = 1;
+let currentAnswer = 0;
+let locked = false;
+let usedQuestions = new Set();
+let timerInterval = null;
+
+// ==== Audio pakai Web Audio API, gak perlu file suara ====
+let audioCtx = null;
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function beep(freq, duration, type = 'sine', volume = 0.2, delay = 0) {
+  const ctx = getCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + delay);
+  osc.stop(ctx.currentTime + delay + duration);
+}
+function playCorrect() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => beep(f, 0.2, 'sine', 0.2, i * 0.09));
+}
+function playWrong() {
+  beep(200, 0.25, 'sawtooth', 0.15);
+  beep(150, 0.3, 'sawtooth', 0.15, 0.15);
+}
+function playClick() {
+  beep(500, 0.05, 'square', 0.1);
+}
+function playCheer() {
+  [659.25, 783.99, 987.77, 1318.5, 1567.98].forEach((f, i) => beep(f, 0.25, 'triangle', 0.18, i * 0.11));
+}
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function selectLevel(lv, btn) {
+  playClick();
+  level = lv;
+  document.querySelectorAll('#levelMenu .level-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('sulitHint').style.display = lv === 'sulit' ? 'block' : 'none';
+}
+
+function selectOp(op, btn) {
+  playClick();
+  mode = op;
+  document.querySelectorAll('#opMenu .op-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function selectJenjang(j, btn) {
+  playClick();
+  jenjang = j;
+  document.querySelectorAll('#jenjangMenu .level-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  renderOpMenu();
+}
+
+// ==== Daftar jenis soal per jenjang ====
+const OP_OPTIONS = {
+  sd: [
+    { key: 'tambah', label: '➕ Tambah', cls: 'tambah' },
+    { key: 'kurang', label: '➖ Kurang', cls: 'kurang' },
+    { key: 'kali', label: '✖️ Kali', cls: 'kali' },
+    { key: 'bagi', label: '➗ Bagi', cls: 'bagi' },
+    { key: 'campur', label: '🎲 Campur Semua', cls: 'campur', full: true }
+  ],
+  smp: [
+    { key: 'bulat', label: '➕➖ Bil. Bulat', cls: 'tambah' },
+    { key: 'pecahan', label: '🍰 Pecahan', cls: 'kurang' },
+    { key: 'persen', label: '💯 Persen', cls: 'kali' },
+    { key: 'aljabar', label: '🔤 Aljabar', cls: 'bagi' },
+    { key: 'akar', label: '🔢 Pangkat & Akar', cls: 'campur', full: true }
+  ],
+  sma: [
+    { key: 'kuadrat', label: '🧩 Pers. Kuadrat', cls: 'tambah' },
+    { key: 'eksponen', label: '⚡ Eksponen', cls: 'kurang' },
+    { key: 'akar', label: '√ Akar', cls: 'kali' },
+    { key: 'trigonometri', label: '📐 Trigonometri', cls: 'bagi' },
+    { key: 'logaritma', label: '📊 Logaritma', cls: 'campur', full: true }
+  ]
+};
+
+function renderOpMenu() {
+  const opts = OP_OPTIONS[jenjang];
+  mode = opts[0].key;
+  const container = document.getElementById('opMenu');
+  container.innerHTML = '';
+  opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'op-btn ' + o.cls + (i === 0 ? ' selected' : '');
+    if (o.full) btn.style.gridColumn = '1 / -1';
+    btn.dataset.op = o.key;
+    btn.textContent = o.label;
+    btn.onclick = () => selectOp(o.key, btn);
+    container.appendChild(btn);
+  });
+}
+
+const QUESTION_COUNT = { mudah: 3, normal: 8, sulit: 15 };
+
+function shuffle(arr) {
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function numericChoices(answer, offset, allowNegative) {
+  const choices = new Set([answer]);
+  let guard = 0;
+  while (choices.size < 4 && guard < 100) {
+    guard++;
+    const d = randInt(-offset, offset);
+    let wrong = answer + d;
+    if (!allowNegative && wrong < 0) wrong = answer + Math.abs(d) + 1;
+    if (wrong === answer) continue;
+    choices.add(wrong);
+  }
+  return shuffle(Array.from(choices));
+}
+
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { [a, b] = [b, a % b]; }
+  return a || 1;
+}
+
+// ==== Generator soal per jenjang ====
+const SD_RANGES = {
+  mudah: { addMax: 20, mulMax: 5 },
+  normal: { addMax: 50, mulMax: 10 },
+  sulit: { addMax: 100, mulMax: 12 }
+};
+const OFFSET = { mudah: 5, normal: 10, sulit: 20 };
+
+function generateSD(op) {
+  let a, b, opSymbol, answer;
+  const r = SD_RANGES[level];
+  if (op === 'campur') {
+    const ops = ['tambah', 'kurang', 'kali', 'bagi'];
+    op = ops[randInt(0, 3)];
+  }
+  if (op === 'tambah') {
+    a = randInt(1, r.addMax); b = randInt(1, r.addMax);
+    opSymbol = '+'; answer = a + b;
+  } else if (op === 'kurang') {
+    a = randInt(1, r.addMax); b = randInt(1, a);
+    opSymbol = '−'; answer = a - b;
+  } else if (op === 'kali') {
+    a = randInt(1, r.mulMax); b = randInt(1, r.mulMax);
+    opSymbol = '×'; answer = a * b;
+  } else {
+    b = randInt(1, r.mulMax);
+    answer = randInt(1, r.mulMax);
+    a = b * answer;
+    opSymbol = '÷';
+  }
+  return { text: `${a} ${opSymbol} ${b}`, answer, choices: numericChoices(answer, OFFSET[level], false) };
+}
+
+const SMP_RANGES = {
+  mudah: { fracMax: 6, bulatMax: 10, persenY: [20, 40, 50, 80, 100], persenSet: [10, 20, 25, 50], aljabarA: [2, 3], aljabarX: 5, aljabarB: 10, akarMax: 6 },
+  normal: { fracMax: 10, bulatMax: 25, persenY: [40, 60, 80, 100, 120, 150], persenSet: [10, 20, 25, 40, 50, 75], aljabarA: [2, 3, 4], aljabarX: 8, aljabarB: 15, akarMax: 9 },
+  sulit: { fracMax: 12, bulatMax: 50, persenY: [60, 80, 100, 150, 200, 250], persenSet: [5, 10, 15, 20, 25, 40, 50, 75], aljabarA: [3, 4, 5, 6], aljabarX: 12, aljabarB: 25, akarMax: 12 }
+};
+
+function generateSMP(op) {
+  const r = SMP_RANGES[level];
+  if (op === 'pecahan') {
+    const d = randInt(3, r.fracMax);
+    let a = randInt(1, d - 1), b = randInt(1, d - 1);
+    const isAdd = Math.random() < 0.5;
+    let sym, num;
+    if (isAdd) { sym = '+'; num = a + b; }
+    else { if (b > a) [a, b] = [b, a]; sym = '−'; num = a - b; }
+    const answer = `${num}/${d}`;
+    const text = `${a}/${d} ${sym} ${b}/${d}`;
+    const choices = new Set([answer]);
+    let guard = 0;
+    while (choices.size < 4 && guard < 50) {
+      guard++;
+      const delta = randInt(-3, 3);
+      let wrongNum = num + delta;
+      if (wrongNum < 0) wrongNum = num + Math.abs(delta) + 1;
+      if (wrongNum !== num) choices.add(`${wrongNum}/${d}`);
+    }
+    return { text, answer, choices: shuffle(Array.from(choices)) };
+  }
+  if (op === 'bulat') {
+    const m = r.bulatMax;
+    const syms = ['+', '−', '×'];
+    const sym = syms[randInt(0, 2)];
+    let a = randInt(-m, m), b, answer;
+    if (sym === '+') { b = randInt(-m, m); answer = a + b; }
+    else if (sym === '−') { b = randInt(-m, m); answer = a - b; }
+    else { b = randInt(-Math.min(m, 12), Math.min(m, 12)); answer = a * b; }
+    const text = `(${a}) ${sym} (${b})`;
+    return { text, answer, choices: numericChoices(answer, OFFSET[level], true) };
+  }
+  if (op === 'persen') {
+    let p, y, tries = 0;
+    do {
+      p = r.persenSet[randInt(0, r.persenSet.length - 1)];
+      y = r.persenY[randInt(0, r.persenY.length - 1)];
+      tries++;
+    } while ((p * y) % 100 !== 0 && tries < 30);
+    const answer = Math.round((p * y) / 100);
+    const text = `${p}% dari ${y} = ?`;
+    return { text, answer, choices: numericChoices(answer, { mudah: 5, normal: 10, sulit: 15 }[level], false) };
+  }
+  if (op === 'aljabar') {
+    const a = r.aljabarA[randInt(0, r.aljabarA.length - 1)];
+    const x = randInt(1, r.aljabarX);
+    const b = randInt(1, r.aljabarB);
+    const c = a * x + b;
+    const text = `${a}x + ${b} = ${c}, x = ?`;
+    return { text, answer: x, choices: numericChoices(x, { mudah: 3, normal: 5, sulit: 8 }[level], false) };
+  }
+  // akar (pangkat & akar)
+  const n = randInt(2, r.akarMax);
+  if (Math.random() < 0.5) {
+    return { text: `${n}²`, answer: n * n, choices: numericChoices(n * n, { mudah: 5, normal: 10, sulit: 20 }[level], false) };
+  } else {
+    const sq = n * n;
+    return { text: `√${sq}`, answer: n, choices: numericChoices(n, { mudah: 3, normal: 5, sulit: 8 }[level], false) };
+  }
+}
+
+const SMA_RANGES = {
+  mudah: { rootMax: 5, expMax: 3, expBase: [2, 3, 4], rootPerfectMax: 10, logBase: [2, 3], logExpMax: 3 },
+  normal: { rootMax: 8, expMax: 4, expBase: [2, 3, 4, 5], rootPerfectMax: 15, logBase: [2, 3, 5], logExpMax: 4 },
+  sulit: { rootMax: 12, expMax: 5, expBase: [2, 3, 4, 5, 6], rootPerfectMax: 20, logBase: [2, 3, 5, 10], logExpMax: 5 }
+};
+
+const TRIG_TABLE = {
+  sin: { 0: '0', 30: '1/2', 45: '√2/2', 60: '√3/2', 90: '1' },
+  cos: { 0: '1', 30: '√3/2', 45: '√2/2', 60: '1/2', 90: '0' },
+  tan: { 0: '0', 30: '√3/3', 45: '1', 60: '√3' }
+};
+
+function generateSMA(op) {
+  const r = SMA_RANGES[level];
+  if (op === 'kuadrat') {
+    let r1 = randInt(-r.rootMax, r.rootMax);
+    let r2 = randInt(-r.rootMax, r.rootMax);
+    while (r2 === r1) r2 = randInt(-r.rootMax, r.rootMax);
+    const b = -(r1 + r2), c = r1 * r2;
+    const bStr = b === 0 ? '' : (b > 0 ? ` + ${b}x` : ` − ${Math.abs(b)}x`);
+    const cStr = c === 0 ? '' : (c > 0 ? ` + ${c}` : ` − ${Math.abs(c)}`);
+    const askSum = Math.random() < 0.5;
+    const answer = askSum ? (r1 + r2) : (r1 * r2);
+    const text = `x²${bStr}${cStr} = 0, ${askSum ? 'jumlah' : 'hasil kali'} akar-akarnya?`;
+    return { text, answer, choices: numericChoices(answer, { mudah: 4, normal: 6, sulit: 10 }[level], true) };
+  }
+  if (op === 'eksponen') {
+    const a = r.expBase[randInt(0, r.expBase.length - 1)];
+    const b = randInt(2, r.expMax);
+    const answer = Math.pow(a, b);
+    return { text: `${a}^${b}`, answer, choices: numericChoices(answer, { mudah: 5, normal: 15, sulit: 40 }[level], false) };
+  }
+  if (op === 'akar') {
+    const useCube = Math.random() < 0.4;
+    if (useCube) {
+      const n = randInt(2, Math.min(r.rootMax, 6));
+      const cube = n * n * n;
+      return { text: `∛${cube}`, answer: n, choices: numericChoices(n, { mudah: 3, normal: 5, sulit: 8 }[level], false) };
+    } else {
+      const n = randInt(2, r.rootMax);
+      const sq = n * n;
+      return { text: `√${sq}`, answer: n, choices: numericChoices(n, { mudah: 3, normal: 5, sulit: 8 }[level], false) };
+    }
+  }
+  if (op === 'trigonometri') {
+    const fns = level === 'mudah' ? ['sin', 'cos'] : ['sin', 'cos', 'tan'];
+    const fn = fns[randInt(0, fns.length - 1)];
+    const angles = Object.keys(TRIG_TABLE[fn]).map(Number);
+    const angle = angles[randInt(0, angles.length - 1)];
+    const answer = TRIG_TABLE[fn][angle];
+    const text = `${fn} ${angle}°`;
+    const pool = new Set();
+    Object.values(TRIG_TABLE).forEach(t => Object.values(t).forEach(v => pool.add(v)));
+    const poolArr = Array.from(pool).filter(v => v !== answer);
+    const choices = new Set([answer]);
+    let guard = 0;
+    while (choices.size < 4 && guard < 50) {
+      guard++;
+      choices.add(poolArr[randInt(0, poolArr.length - 1)]);
+    }
+    return { text, answer, choices: shuffle(Array.from(choices)) };
+  }
+  // logaritma
+  const b = r.logBase[randInt(0, r.logBase.length - 1)];
+  const e = randInt(1, r.logExpMax);
+  const val = Math.pow(b, e);
+  const text = `Log basis ${b} dari ${val} = ?`;
+  return { text, answer: e, choices: numericChoices(e, { mudah: 2, normal: 3, sulit: 4 }[level], false) };
+}
+
+function generateQuestion(op) {
+  if (jenjang === 'sd') return generateSD(op);
+  if (jenjang === 'smp') return generateSMP(op);
+  return generateSMA(op);
+}
+
+function startGame() {
+  playClick();
+  getCtx(); // unlock audio di gesture pertama
+  benar = 0; salah = 0; soalKe = 1;
+  usedQuestions = new Set();
+  document.getElementById('menuArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('gameArea').style.display = 'block';
+  document.getElementById('totalSoal').textContent = QUESTION_COUNT[level];
+  updateScoreBar();
+  nextQuestion();
+}
+
+function backToMenu() {
+  playClick();
+  clearTimerState();
+  document.getElementById('gameArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('menuArea').style.display = 'block';
+}
+
+function updateScoreBar() {
+  document.getElementById('soalKe').textContent = soalKe;
+  document.getElementById('benar').textContent = benar;
+  document.getElementById('salah').textContent = salah;
+}
+
+function nextQuestion() {
+  locked = false;
+  let q, tries = 0;
+  do {
+    q = generateQuestion(mode);
+    tries++;
+  } while (usedQuestions.has(q.text) && tries < 40);
+  usedQuestions.add(q.text);
+  currentAnswer = q.answer;
+  const displayText = q.text.trim().endsWith('?') ? q.text : q.text + ' = ?';
+  document.getElementById('question').textContent = displayText;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+
+  const choices = q.choices;
+  const answersEl = document.getElementById('answers');
+  answersEl.innerHTML = '';
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = choice;
+    btn.onclick = () => checkAnswer(choice, btn);
+    answersEl.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function clearTimerState() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function startTimer() {
+  clearTimerState();
+  const wrap = document.getElementById('timerWrap');
+  if (level !== 'sulit') { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  let timeLeft = 5;
+  const numEl = document.getElementById('timerNum');
+  const bar = document.getElementById('timerBarInner');
+  numEl.textContent = timeLeft;
+  bar.classList.remove('danger');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  void bar.offsetWidth; // paksa reflow biar transisi berikutnya kepakai
+  bar.style.transition = 'width 1s linear';
+  bar.style.width = '80%';
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    numEl.textContent = Math.max(timeLeft, 0);
+    bar.style.width = Math.max(timeLeft, 0) * 20 + '%';
+    if (timeLeft <= 2) bar.classList.add('danger');
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timeUp();
+    }
+  }, 1000);
+}
+
+function timeUp() {
+  if (locked) return;
+  locked = true;
+  const feedback = document.getElementById('feedback');
+  const allBtns = document.querySelectorAll('.answer-btn');
+  allBtns.forEach(b => {
+    b.disabled = true;
+    if (b.textContent === String(currentAnswer)) b.classList.add('correct');
+  });
+  feedback.textContent = `⏰ Waktu habis! Jawabannya ${currentAnswer} 😊`;
+  feedback.className = 'feedback sad';
+  playWrong();
+  salah++;
+  updateScoreBar();
+
+  const total = QUESTION_COUNT[level];
+  setTimeout(() => {
+    if (soalKe >= total) {
+      showResult();
+    } else {
+      soalKe++;
+      nextQuestion();
+    }
+  }, 1400);
+}
+
+function checkAnswer(choice, btn) {
+  if (locked) return;
+  locked = true;
+  clearTimerState();
+  const feedback = document.getElementById('feedback');
+  const allBtns = document.querySelectorAll('.answer-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const isCorrect = String(choice) === String(currentAnswer);
+
+  if (isCorrect) {
+    benar++;
+    btn.classList.add('correct');
+    feedback.textContent = pickPraise();
+    feedback.className = 'feedback happy';
+    if (benar % 5 === 0) { playCheer(); } else { playCorrect(); }
+  } else {
+    salah++;
+    btn.classList.add('wrong');
+    feedback.textContent = `Kamu pilih ${choice}, jawaban yang benar itu ${currentAnswer} 😊`;
+    feedback.className = 'feedback sad';
+    playWrong();
+    allBtns.forEach(b => { if (b.textContent === String(currentAnswer)) b.classList.add('correct'); });
+  }
+
+  updateScoreBar();
+
+  const total = QUESTION_COUNT[level];
+  setTimeout(() => {
+    if (soalKe >= total) {
+      showResult();
+    } else {
+      soalKe++;
+      nextQuestion();
+    }
+  }, 1400);
+}
+
+function showResult() {
+  clearTimerState();
+  document.getElementById('gameArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'block';
+  document.getElementById('finalBenar').textContent = benar;
+  document.getElementById('finalSalah').textContent = salah;
+
+  const total = QUESTION_COUNT[level];
+  const ratio = benar / total;
+  let emoji, title;
+  if (ratio === 1) { emoji = '🏆'; title = 'Sempurna! Kamu Juara!'; playCheer(); }
+  else if (ratio >= 0.7) { emoji = '🎉'; title = 'Keren, Hebat Banget!'; playCheer(); }
+  else if (ratio >= 0.4) { emoji = '👍'; title = 'Bagus, Terus Berlatih!'; playCorrect(); }
+  else { emoji = '💪'; title = 'Ayo Coba Lagi, Semangat!'; playCorrect(); }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+}
+
+function pickPraise() {
+  const praises = ['Betul! Pintar! 🎉', 'Hebat! 👏', 'Keren banget! ⭐', 'Jawaban tepat! 🥳', 'Mantap! 💪'];
+  return praises[randInt(0, praises.length - 1)];
+}
+
+renderOpMenu();
+</script>
+
+</body>
+</html>

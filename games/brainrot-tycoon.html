@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAINROT TYCOON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12081f;
+    --bg2:#1c0f2e;
+    --panel:#1f1130;
+    --lime:#c6ff3d;
+    --pink:#ff2e88;
+    --cyan:#2de3ff;
+    --gold:#facc15;
+    --text:#f1e9ff;
+    --muted:#a996c4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, #3a1a5c55, transparent 40%),
+      radial-gradient(circle at 85% 20%, #ff2e8833, transparent 35%),
+      radial-gradient(circle at 50% 90%, #2de3ff22, transparent 45%),
+      var(--bg);
+    font-family:'Baloo 2', sans-serif;
+    color:var(--text);
+    padding:16px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  h1{
+    font-size:clamp(28px,6vw,42px);
+    font-weight:800;
+    margin:0;
+    letter-spacing:1px;
+    background:linear-gradient(90deg,var(--lime),var(--cyan) 50%,var(--pink));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:wiggle 3.5s ease-in-out infinite;
+    text-shadow:0 0 30px #ffffff10;
+  }
+  @keyframes wiggle{
+    0%,100%{transform:rotate(-1deg);}
+    50%{transform:rotate(1deg);}
+  }
+  .stats{
+    display:flex;
+    gap:10px;
+  }
+  .stat{
+    background:var(--panel);
+    border:2px solid #ffffff14;
+    border-radius:14px;
+    padding:8px 14px;
+    font-family:'Space Mono',monospace;
+    font-size:14px;
+  }
+  .stat b{display:block;font-family:'Baloo 2';font-size:18px;}
+  .coins b{color:var(--gold);}
+  .income b{color:var(--lime);}
+
+  section{
+    background:var(--panel);
+    border:2px solid #ffffff14;
+    border-radius:20px;
+    padding:16px;
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  section::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:4px;
+  }
+  .base::before{background:linear-gradient(90deg,var(--lime),var(--cyan));}
+  .wild::before{background:linear-gradient(90deg,var(--pink),var(--gold));}
+  .shop::before{background:linear-gradient(90deg,var(--gold),var(--lime));}
+
+  h2{
+    margin:0 0 12px 0;
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tag{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    font-weight:400;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+    gap:10px;
+  }
+  .plot{
+    background:#150a24;
+    border:2px dashed #ffffff20;
+    border-radius:14px;
+    min-height:110px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:8px;
+    text-align:center;
+    cursor:default;
+    transition:transform .15s;
+  }
+  .plot.filled{
+    border-style:solid;
+    cursor:pointer;
+  }
+  .plot.filled:hover{transform:translateY(-3px);}
+  .plot .emoji{font-size:30px;}
+  .plot .name{font-size:12px;font-weight:700;margin-top:2px;}
+  .plot .income{font-family:'Space Mono',monospace;font-size:11px;color:var(--lime);}
+  .plot .empty-label{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;}
+
+  .rarity-common{border-color:#9ca3af;}
+  .rarity-uncommon{border-color:#4ade80;}
+  .rarity-rare{border-color:#38bdf8;}
+  .rarity-epic{border-color:#c084fc;}
+  .rarity-legendary{border-color:var(--gold); box-shadow:0 0 14px #facc1555;}
+  .rarity-secret{
+    border-color:#ff2e88;
+    box-shadow:0 0 18px #ff2e8877;
+    animation:secretGlow 1.6s ease-in-out infinite;
+  }
+  @keyframes secretGlow{
+    0%,100%{box-shadow:0 0 14px #ff2e8877; border-color:#ff2e88;}
+    33%{box-shadow:0 0 18px #facc1588; border-color:#facc15;}
+    66%{box-shadow:0 0 18px #2de3ff88; border-color:#2de3ff;}
+  }
+  .rarity-og{
+    border-color:#ffffff;
+    box-shadow:0 0 24px #ffffffaa;
+    animation:ogGlow 1.1s ease-in-out infinite;
+  }
+  @keyframes ogGlow{
+    0%,100%{box-shadow:0 0 16px #ffffffaa; border-color:#ffffff; transform:scale(1);}
+    50%{box-shadow:0 0 30px #facc15cc, 0 0 46px #ff2e8877; border-color:var(--gold); transform:scale(1.03);}
+  }
+  .og-ring{
+    position:absolute;
+    inset:-9px;
+    border-radius:20px;
+    background:conic-gradient(from 0deg, #ff2e88, #facc15, #2de3ff, #c6ff3d, #ff2e88);
+    filter:blur(6px);
+    opacity:.8;
+    z-index:-1;
+    animation:ringSpin 2.2s linear infinite;
+  }
+  @keyframes ringSpin{ to{ transform:rotate(360deg); } }
+  .og-badge{
+    position:absolute;
+    top:-13px; left:50%;
+    transform:translateX(-50%) rotateZ(-45deg) rotateX(-55deg) scale(1);
+    background:linear-gradient(90deg,var(--gold),var(--pink));
+    color:#12081f;
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    font-size:9px;
+    padding:2px 7px;
+    border-radius:6px;
+    letter-spacing:1.5px;
+    white-space:nowrap;
+    z-index:2;
+    animation:badgePulse 0.9s ease-in-out infinite;
+  }
+  @keyframes badgePulse{
+    0%,100%{transform:translateX(-50%) rotateZ(-45deg) rotateX(-55deg) scale(1);}
+    50%{transform:translateX(-50%) rotateZ(-45deg) rotateX(-55deg) scale(1.18);}
+  }
+  .iso-tile.og-tile .emoji{font-size:34px;}
+
+  .mut-gold{outline:3px solid #facc15; outline-offset:2px;}
+  .mut-diamond{outline:3px solid #7dd3fc; outline-offset:2px;}
+  .mut-rainbow{
+    outline:3px solid #ff2e88;
+    outline-offset:2px;
+    animation:rainbowOutline 2s linear infinite;
+  }
+  @keyframes rainbowOutline{
+    0%{outline-color:#ff2e88;}
+    20%{outline-color:#facc15;}
+    40%{outline-color:#c6ff3d;}
+    60%{outline-color:#2de3ff;}
+    80%{outline-color:#c084fc;}
+    100%{outline-color:#ff2e88;}
+  }
+  .mut-chip{
+    font-family:'Space Mono',monospace;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.5px;
+  }
+  .mut-chip.gold{color:#facc15;}
+  .mut-chip.diamond{color:#7dd3fc;}
+  .mut-chip.rainbow{
+    background:linear-gradient(90deg,#ff2e88,#facc15,#c6ff3d,#2de3ff,#c084fc);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  /* ---------- Isometric 2.5D stage ---------- */
+  .iso-wrap{
+    perspective:1300px;
+    display:flex;
+    justify-content:center;
+    padding:34px 6px 54px;
+    overflow-x:auto;
+  }
+  .iso-floor{
+    display:grid;
+    grid-template-columns:repeat(3, 92px);
+    gap:8px;
+    transform:rotateX(55deg) rotateZ(45deg);
+    transform-style:preserve-3d;
+  }
+  .iso-tile{
+    width:92px;height:92px;
+    border-radius:14px;
+    position:relative;
+    transform-style:preserve-3d;
+    background:#150a24;
+    border:2px dashed #ffffff22;
+    box-shadow:6px 6px 0 -1px rgba(0,0,0,.4), 0 0 0 1px #00000030;
+    transition:transform .15s;
+  }
+  .iso-tile.filled{border-style:solid; cursor:pointer;}
+  .iso-tile.filled:hover{transform:translateZ(10px);}
+  .iso-tile .content{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    transform:rotateZ(-45deg) rotateX(-55deg);
+    text-align:center;
+    padding:2px;
+    gap:1px;
+  }
+  .iso-tile .shadow-ellipse{
+    position:absolute;
+    bottom:12%;
+    left:50%;
+    width:34px;height:11px;
+    background:rgba(0,0,0,.45);
+    border-radius:50%;
+    transform:translateX(-50%) rotateZ(-45deg) rotateX(-55deg) translateZ(-1px);
+    filter:blur(1.5px);
+  }
+  .iso-tile .emoji{font-size:26px;display:inline-block;animation:bob 2.4s ease-in-out infinite;}
+  .iso-tile .name{font-size:10px;font-weight:700;line-height:1.1;}
+  .iso-tile .income{font-family:'Space Mono',monospace;font-size:9px;color:var(--lime);}
+  .iso-tile .empty-label{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+
+
+
+  .wild-box{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .spawn-card{
+    background:#150a24;
+    border:2px solid var(--pink);
+    border-radius:14px;
+    padding:12px 16px;
+    text-align:center;
+    min-width:130px;
+  }
+  .spawn-card .emoji{font-size:34px;}
+  .timerbar{
+    height:6px;background:#ffffff15;border-radius:4px;overflow:hidden;margin-top:6px;
+  }
+  .timerbar div{height:100%;background:var(--pink);width:100%;}
+
+  button{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+    cursor:pointer;
+    font-size:14px;
+    margin-top:8px;
+  }
+  .btn-grab{background:var(--lime);color:#12081f;}
+  .btn-sell{background:#ffffff18;color:var(--text);width:100%;}
+  .btn-reroll{background:var(--gold);color:#12081f;}
+  .btn-place{background:var(--cyan);color:#12081f;width:100%;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  button:active{transform:scale(0.96);}
+
+  .inv-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .inv-card{
+    background:#150a24;
+    border:2px solid #ffffff20;
+    border-radius:12px;
+    padding:8px 10px;
+    text-align:center;
+    width:90px;
+  }
+  .inv-card .emoji{font-size:24px;}
+  .empty-note{color:var(--muted);font-family:'Space Mono',monospace;font-size:12px;}
+
+  #log{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    min-height:18px;
+  }
+
+  .crown-wrap{
+    display:flex;
+    justify-content:center;
+    margin:22px 0 6px;
+  }
+  #crownBtn{
+    background:linear-gradient(135deg,var(--gold),#fff7cc);
+    color:#12081f;
+    border-radius:50%;
+    width:54px;height:54px;
+    font-size:24px;
+    box-shadow:0 0 16px #facc1555;
+    margin-top:0;
+  }
+  #crownBtn:hover{transform:scale(1.08);}
+
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(10,4,20,.75);
+    display:flex;align-items:center;justify-content:center;
+    z-index:50;
+    padding:16px;
+  }
+  .modal-box{
+    background:var(--panel);
+    border:2px solid var(--gold);
+    border-radius:18px;
+    padding:24px;
+    text-align:center;
+    max-width:280px;
+    width:100%;
+    box-shadow:0 0 30px #facc1533;
+  }
+  .modal-box input{
+    width:100%;
+    margin-top:12px;
+    padding:10px;
+    border-radius:10px;
+    border:2px solid #ffffff20;
+    background:#150a24;
+    color:var(--text);
+    font-family:'Space Mono',monospace;
+    font-size:16px;
+    text-align:center;
+    letter-spacing:4px;
+  }
+
+  .admin-panel{
+    background:var(--panel);
+    border:2px solid var(--gold);
+    box-shadow:0 0 20px #facc1544;
+    border-radius:20px;
+    padding:16px;
+    margin-top:16px;
+  }
+  .admin-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .admin-row select, .admin-row input{
+    flex:1;
+    min-width:140px;
+    padding:9px 10px;
+    border-radius:10px;
+    border:2px solid #ffffff20;
+    background:#150a24;
+    color:var(--text);
+    font-family:'Baloo 2',sans-serif;
+    font-size:14px;
+  }
+  .admin-row button{margin-top:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>BRAINROT TYCOON</h1>
+    <div class="stats">
+      <div class="stat coins">COINS<b id="coinsVal">50</b></div>
+      <div class="stat income">PER DETIK<b id="incomeVal">0</b></div>
+      <button id="muteBtn" class="btn-reroll" style="margin-top:0;">🔊 Suara</button>
+    </div>
+  </header>
+
+  <section class="base">
+    <h2>Markas Lo <span class="tag">— klik makhluk buat jual</span></h2>
+    <div class="iso-wrap"><div class="iso-floor" id="baseGrid"></div></div>
+  </section>
+
+  <section class="wild">
+    <h2>Spawn Liar <span class="tag">— beli pakai koin sebelum ilang</span></h2>
+    <div class="wild-box" id="wildBox"></div>
+  </section>
+
+  <section class="shop">
+    <h2>Toko <span class="tag">— reroll dapet makhluk random</span></h2>
+    <button class="btn-reroll" id="rerollBtn">Reroll (30 coins)</button>
+    <div style="margin-top:14px;">
+      <h2 style="font-size:14px;">Inventaris</h2>
+      <div class="inv-row" id="invRow"></div>
+    </div>
+  </section>
+
+  <div id="log"></div>
+
+  <div id="adminPanel" class="admin-panel" style="display:none;">
+    <h2>🛡️ ADMIN PANEL <span class="tag">— khusus bos</span></h2>
+    <div class="admin-row">
+      <select id="spawnSelect"></select>
+      <select id="mutationSelect">
+        <option value="random">🎲 Acak (sesuai peluang)</option>
+        <option value="none">Tanpa Mutasi</option>
+        <option value="gold">✨ Emas</option>
+        <option value="diamond">💎 Berlian</option>
+        <option value="rainbow">🌈 Pelangi</option>
+      </select>
+      <button class="btn-reroll" id="spawnBtn">Spawn ke Markas</button>
+    </div>
+    <div class="admin-row">
+      <input id="coinInput" type="number" placeholder="Jumlah koin" />
+      <button class="btn-reroll" id="setCoinBtn">Set Koin</button>
+    </div>
+  </div>
+
+  <div class="crown-wrap">
+    <button id="crownBtn" title="???">👑</button>
+  </div>
+</div>
+
+<div id="codeModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div style="font-size:32px;">👑</div>
+    <h2 style="margin-top:6px;">Masukin Kode</h2>
+    <input id="codeInput" type="password" inputmode="numeric" maxlength="8" placeholder="****" />
+    <div id="codeError" style="color:var(--pink);font-family:'Space Mono',monospace;font-size:12px;min-height:16px;margin-top:6px;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+      <button class="btn-reroll" id="codeSubmitBtn">Buka</button>
+      <button class="btn-sell" id="codeCancelBtn">Batal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Data ----------
+const RARITIES = {
+  common:    { mult:1,  color:'#9ca3af', weight:55,   class:'rarity-common' },
+  uncommon:  { mult:2.5,color:'#4ade80', weight:25,   class:'rarity-uncommon' },
+  rare:      { mult:6,  color:'#38bdf8', weight:12,   class:'rarity-rare' },
+  epic:      { mult:15, color:'#c084fc', weight:6,    class:'rarity-epic' },
+  legendary: { mult:40, color:'#facc15', weight:1.7,  class:'rarity-legendary' },
+  secret:    { mult:100,color:'#ff2e88', weight:0.25, class:'rarity-secret' },
+  og:        { mult:300,color:'#ffffff', weight:0.05, class:'rarity-og' },
+};
+
+const TEMPLATES = [
+  {name:'Sock Goblin',    emoji:'🧦', rarity:'common'},
+  {name:'Waffle Ogre',    emoji:'🧇', rarity:'common'},
+  {name:'Pickle Knight',  emoji:'🥒', rarity:'common'},
+  {name:'Noodle Beast',   emoji:'🍜', rarity:'common'},
+  {name:'Cactus Wizardo', emoji:'🌵', rarity:'uncommon'},
+  {name:'Cloud Puppo',    emoji:'☁️', rarity:'uncommon'},
+  {name:'Banana Glorpo',  emoji:'🍌', rarity:'uncommon'},
+  {name:'Disco Yeti',     emoji:'🕺', rarity:'uncommon'},
+  {name:'Trumpet Shark',  emoji:'🦈', rarity:'rare'},
+  {name:'Lava Snail',     emoji:'🌋', rarity:'rare'},
+  {name:'Crystal Moose',  emoji:'💎', rarity:'rare'},
+  {name:'Void Chicken',   emoji:'🐔', rarity:'epic'},
+  {name:'Thunder Pasta',  emoji:'⚡', rarity:'epic'},
+  {name:'Cosmic Burrito', emoji:'🌌', rarity:'legendary'},
+  {name:'Golden Sasquatch',emoji:'🦍', rarity:'legendary'},
+  {name:'Shadow Capybara', emoji:'🌑', rarity:'secret'},
+  {name:'OG Moai King',   emoji:'🗿', rarity:'og'},
+];
+
+function pickTemplate(){
+  const total = TEMPLATES.reduce((s,t)=>s+RARITIES[t.rarity].weight,0);
+  let r = Math.random()*total;
+  for(const t of TEMPLATES){
+    r -= RARITIES[t.rarity].weight;
+    if(r<=0) return t;
+  }
+  return TEMPLATES[0];
+}
+
+const MUTATIONS = {
+  none:    { mult:1, label:null,     chipClass:null,     chance:0 },
+  gold:    { mult:2, label:'EMAS',    chipClass:'gold',    chance:0.08 },
+  diamond: { mult:4, label:'BERLIAN', chipClass:'diamond', chance:0.03 },
+  rainbow: { mult:8, label:'PELANGI', chipClass:'rainbow', chance:0.012 },
+};
+function rollMutation(){
+  const r = Math.random();
+  if(r < MUTATIONS.rainbow.chance) return 'rainbow';
+  if(r < MUTATIONS.rainbow.chance + MUTATIONS.diamond.chance) return 'diamond';
+  if(r < MUTATIONS.rainbow.chance + MUTATIONS.diamond.chance + MUTATIONS.gold.chance) return 'gold';
+  return 'none';
+}
+function buildCreature(t, mutation){
+  const rar = RARITIES[t.rarity];
+  const mutMult = MUTATIONS[mutation].mult;
+  return {
+    id: Math.random().toString(36).slice(2),
+    name: t.name, emoji: t.emoji, rarity: t.rarity,
+    mutation: mutation,
+    income: +(rar.mult * mutMult).toFixed(2)
+  };
+}
+function makeCreature(){
+  const t = pickTemplate();
+  return buildCreature(t, rollMutation());
+}
+
+// ---------- Sound engine ----------
+let audioCtx = null;
+let soundOn = true;
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function beep(freq, start, dur, type='sine', vol=0.16){
+  if(!soundOn) return;
+  const ctx = getCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  gain.gain.setValueAtTime(0, ctx.currentTime + start);
+  gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.02);
+}
+const sfx = {
+  grab: ()=>{ beep(520,0,0.08,'triangle'); beep(780,0.07,0.12,'triangle'); },
+  sell: ()=>{ beep(880,0,0.06,'square',0.1); beep(1180,0.06,0.14,'square',0.1); },
+  reroll: ()=>{ for(let i=0;i<6;i++) beep(300+i*70, i*0.03, 0.05,'sawtooth',0.06); },
+  place: ()=>{ beep(440,0,0.09,'sine'); },
+  fail: ()=>{ beep(180,0,0.18,'sawtooth',0.12); },
+};
+document.getElementById('muteBtn').onclick = ()=>{
+  soundOn = !soundOn;
+  document.getElementById('muteBtn').textContent = soundOn ? '🔊 Suara' : '🔇 Bisu';
+  if(soundOn) getCtx();
+};
+
+// ---------- State ----------
+let coins = 50;
+const BASE_SIZE = 6;
+let basePlots = new Array(BASE_SIZE).fill(null);
+let inventory = [];
+let wildSpawn = null; // {creature, ttl}
+let rerollCost = 30;
+let log = '';
+
+function setLog(msg){ log = msg; document.getElementById('log').textContent = msg; }
+
+// ---------- Save / Load (persists across sessions) ----------
+async function saveGame(){
+  try{
+    await window.storage.set('brainrot-save', JSON.stringify({
+      coins, basePlots, inventory, rerollCost, adminUnlocked
+    }), false);
+  } catch(e){
+    console.error('Gagal nyimpen progress', e);
+  }
+}
+async function loadGame(){
+  try{
+    const res = await window.storage.get('brainrot-save', false);
+    if(res && res.value){
+      const data = JSON.parse(res.value);
+      if(typeof data.coins === 'number') coins = data.coins;
+      if(Array.isArray(data.basePlots) && data.basePlots.length === BASE_SIZE) basePlots = data.basePlots;
+      if(Array.isArray(data.inventory)) inventory = data.inventory;
+      if(typeof data.rerollCost === 'number') rerollCost = data.rerollCost;
+      if(data.adminUnlocked){ adminUnlocked = true; document.getElementById('adminPanel').style.display = 'block'; }
+      setLog('Progress lo dimuat lagi. Lanjut ngumpulin brainrot!');
+    } else {
+      setLog('Selamat datang di Brainrot Tycoon! Kumpulin makhluk, sikat spawn liar, dan jadi paling OG.');
+    }
+  } catch(e){
+    setLog('Selamat datang di Brainrot Tycoon! Kumpulin makhluk, sikat spawn liar, dan jadi paling OG.');
+  }
+  render();
+}
+
+// ---------- Rendering ----------
+function render(){
+  document.getElementById('coinsVal').textContent = Math.floor(coins);
+  const totalIncome = basePlots.filter(Boolean).reduce((s,c)=>s+c.income,0);
+  document.getElementById('incomeVal').textContent = totalIncome.toFixed(1);
+
+  // base grid
+  const baseGrid = document.getElementById('baseGrid');
+  baseGrid.innerHTML = '';
+  basePlots.forEach((c, i)=>{
+    const div = document.createElement('div');
+    if(c){
+      const isOg = c.rarity === 'og';
+      const mut = MUTATIONS[c.mutation] || MUTATIONS.none;
+      const mutClass = mut.chipClass ? ' mut-'+c.mutation : '';
+      div.className = 'iso-tile filled ' + RARITIES[c.rarity].class + (isOg ? ' og-tile' : '') + mutClass;
+      div.innerHTML = `
+        ${isOg ? '<div class="og-ring"></div><div class="og-badge">★ OG ★</div>' : ''}
+        <div class="shadow-ellipse"></div>
+        <div class="content">
+          <div class="emoji">${c.emoji}</div>
+          <div class="name">${c.name}</div>
+          ${mut.label ? `<div class="mut-chip ${mut.chipClass}">✨ ${mut.label}</div>` : ''}
+          <div class="income">+${c.income}/dtk</div>
+        </div>`;
+      div.title = 'Klik buat jual';
+      div.onclick = ()=> sellFromBase(i);
+    } else {
+      div.className = 'iso-tile';
+      div.innerHTML = `<div class="content"><div class="empty-label">Kosong</div></div>`;
+    }
+    baseGrid.appendChild(div);
+  });
+
+  // wild spawn
+  const wildBox = document.getElementById('wildBox');
+  wildBox.innerHTML = '';
+  if(wildSpawn){
+    const c = wildSpawn.creature;
+    const cost = wildSpawn.cost;
+    const mut = MUTATIONS[c.mutation] || MUTATIONS.none;
+    const pct = Math.max(0, (wildSpawn.ttl/wildSpawn.maxTtl)*100);
+    const card = document.createElement('div');
+    card.className = 'spawn-card' + (mut.chipClass ? ' mut-'+c.mutation : '');
+    card.innerHTML = `
+      <div class="emoji">${c.emoji}</div>
+      <div class="name">${c.name}</div>
+      <div style="font-size:11px;color:${RARITIES[c.rarity].color};font-family:'Space Mono',monospace;">${c.rarity.toUpperCase()}</div>
+      ${mut.label ? `<div class="mut-chip ${mut.chipClass}">✨ ${mut.label}</div>` : ''}
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);margin-top:4px;">${cost} coins</div>
+      <div class="timerbar"><div style="width:${pct}%"></div></div>
+      <button class="btn-grab" ${coins < cost ? 'disabled' : ''}>Beli & Sikat!</button>
+    `;
+    card.querySelector('.btn-grab').onclick = grabWild;
+    wildBox.appendChild(card);
+  } else {
+    wildBox.innerHTML = `<div class="empty-note">Nunggu spawn liar berikutnya...</div>`;
+  }
+
+  // inventory
+  const invRow = document.getElementById('invRow');
+  invRow.innerHTML = '';
+  if(inventory.length===0){
+    invRow.innerHTML = `<div class="empty-note">Inventaris kosong</div>`;
+  }
+  inventory.forEach((c, i)=>{
+    const div = document.createElement('div');
+    const mut = MUTATIONS[c.mutation] || MUTATIONS.none;
+    div.className = 'inv-card' + (mut.chipClass ? ' mut-'+c.mutation : '');
+    div.innerHTML = `
+      <div class="emoji">${c.emoji}</div>
+      <div class="name" style="font-size:11px;font-weight:700;">${c.name}</div>
+      <div style="font-size:10px;color:${RARITIES[c.rarity].color};font-family:'Space Mono',monospace;">${c.rarity.toUpperCase()}</div>
+      ${mut.label ? `<div class="mut-chip ${mut.chipClass}">✨ ${mut.label}</div>` : ''}
+      <button class="btn-place">Taruh</button>
+    `;
+    div.querySelector('.btn-place').onclick = ()=> placeFromInventory(i);
+    invRow.appendChild(div);
+  });
+
+  document.getElementById('rerollBtn').textContent = `Reroll (${rerollCost} coins)`;
+  document.getElementById('rerollBtn').disabled = coins < rerollCost;
+}
+
+// ---------- Actions ----------
+function sellFromBase(i){
+  const c = basePlots[i];
+  if(!c) return;
+  const price = Math.round(c.income * 20);
+  coins += price;
+  sfx.sell();
+  setLog(`Terjual ${c.name} seharga ${price} coins.`);
+  basePlots[i] = null;
+  saveGame();
+  render();
+}
+
+function firstEmptyBase(){
+  return basePlots.findIndex(p=>p===null);
+}
+
+function grabWild(){
+  if(!wildSpawn) return;
+  const c = wildSpawn.creature;
+  const cost = wildSpawn.cost;
+  if(coins < cost){
+    sfx.fail();
+    setLog(`Koin kurang! Butuh ${cost} coins buat beli ${c.name}.`);
+    return;
+  }
+  const slot = firstEmptyBase();
+  if(slot !== -1){
+    coins -= cost;
+    basePlots[slot] = c;
+    sfx.grab();
+    setLog(`Beli ${c.name} seharga ${cost} coins, langsung ditaruh!`);
+  } else if(inventory.length < 4){
+    coins -= cost;
+    inventory.push(c);
+    sfx.grab();
+    setLog(`Beli ${c.name} seharga ${cost} coins (masuk inventaris).`);
+  } else {
+    sfx.fail();
+    setLog(`Markas & inventaris penuh, ${c.name} kabur!`);
+  }
+  wildSpawn = null;
+  saveGame();
+  render();
+}
+
+function placeFromInventory(i){
+  const slot = firstEmptyBase();
+  if(slot === -1){ sfx.fail(); setLog('Markas penuh! Jual sesuatu dulu.'); return; }
+  const c = inventory.splice(i,1)[0];
+  basePlots[slot] = c;
+  sfx.place();
+  setLog(`${c.name} ditaruh di markas.`);
+  saveGame();
+  render();
+}
+
+document.getElementById('rerollBtn').onclick = ()=>{
+  if(coins < rerollCost) return;
+  coins -= rerollCost;
+  rerollCost = Math.round(rerollCost * 1.15);
+  sfx.reroll();
+  const c = makeCreature();
+  if(inventory.length < 4){
+    inventory.push(c);
+    setLog(`Dapet ${c.name} (${c.rarity})!`);
+  } else {
+    const slot = firstEmptyBase();
+    if(slot !== -1){ basePlots[slot] = c; setLog(`Dapet ${c.name}, langsung ditaruh!`); }
+    else setLog(`Dapet ${c.name} tapi gak muat, kabur...`);
+  }
+  saveGame();
+  render();
+};
+
+// ---------- Game loop ----------
+let tickCount = 0;
+function tick(){
+  const totalIncome = basePlots.filter(Boolean).reduce((s,c)=>s+c.income,0);
+  coins += totalIncome;
+  render();
+  tickCount++;
+  if(tickCount % 10 === 0) saveGame(); // autosave every ~10s
+}
+setInterval(tick, 1000);
+
+function spawnLoop(){
+  if(!wildSpawn){
+    const creature = makeCreature();
+    const cost = Math.round(15 + creature.income * 8);
+    wildSpawn = { creature, cost, ttl: 8000, maxTtl: 8000 };
+  }
+  setTimeout(spawnLoop, 4500 + Math.random()*2500);
+}
+setTimeout(spawnLoop, 1500);
+
+setInterval(()=>{
+  if(wildSpawn){
+    wildSpawn.ttl -= 300;
+    if(wildSpawn.ttl <= 0){ wildSpawn = null; }
+    render();
+  }
+}, 300);
+
+window.addEventListener('beforeunload', saveGame);
+loadGame();
+
+// ---------- Admin panel (secret) ----------
+const ADMIN_CODE = '1990';
+let adminUnlocked = false;
+
+function populateSpawnSelect(){
+  const sel = document.getElementById('spawnSelect');
+  sel.innerHTML = TEMPLATES.map(t=>
+    `<option value="${t.name}">${t.emoji} ${t.name} — ${t.rarity.toUpperCase()}</option>`
+  ).join('');
+}
+populateSpawnSelect();
+
+function openAdminPanel(){
+  adminUnlocked = true;
+  document.getElementById('adminPanel').style.display = 'block';
+  setLog('Admin Panel kebuka! Lo sekarang bos di sini.');
+}
+
+document.getElementById('crownBtn').onclick = ()=>{
+  if(adminUnlocked){
+    document.getElementById('adminPanel').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  document.getElementById('codeModal').style.display = 'flex';
+  document.getElementById('codeError').textContent = '';
+  document.getElementById('codeInput').value = '';
+  document.getElementById('codeInput').focus();
+};
+
+document.getElementById('codeCancelBtn').onclick = ()=>{
+  document.getElementById('codeModal').style.display = 'none';
+};
+
+function submitCode(){
+  const val = document.getElementById('codeInput').value.trim();
+  if(val === ADMIN_CODE){
+    document.getElementById('codeModal').style.display = 'none';
+    sfx.grab();
+    openAdminPanel();
+    saveGame();
+    render();
+  } else {
+    sfx.fail();
+    document.getElementById('codeError').textContent = 'Kode salah, coba lagi.';
+  }
+}
+document.getElementById('codeSubmitBtn').onclick = submitCode;
+document.getElementById('codeInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') submitCode();
+});
+
+document.getElementById('spawnBtn').onclick = ()=>{
+  const name = document.getElementById('spawnSelect').value;
+  const t = TEMPLATES.find(t=>t.name === name);
+  if(!t) return;
+  const mutSel = document.getElementById('mutationSelect').value;
+  const mutation = mutSel === 'random' ? rollMutation() : mutSel;
+  const c = buildCreature(t, mutation);
+  const slot = firstEmptyBase();
+  if(slot !== -1){ basePlots[slot] = c; setLog(`[ADMIN] ${c.name}${MUTATIONS[mutation].label ? ' ('+MUTATIONS[mutation].label+')' : ''} di-spawn ke markas.`); }
+  else if(inventory.length < 4){ inventory.push(c); setLog(`[ADMIN] ${c.name} masuk inventaris.`); }
+  else setLog('[ADMIN] Markas & inventaris penuh.');
+  sfx.grab();
+  saveGame();
+  render();
+};
+
+document.getElementById('setCoinBtn').onclick = ()=>{
+  const val = parseInt(document.getElementById('coinInput').value, 10);
+  if(isNaN(val)) return;
+  coins = Math.max(0, val);
+  sfx.sell();
+  setLog(`[ADMIN] Koin diset jadi ${coins}.`);
+  saveGame();
+  render();
+};
+</script>
+</body>
+</html>
